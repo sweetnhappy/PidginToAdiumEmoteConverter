@@ -2,11 +2,8 @@
 
 /* Controllers */
 
-
-function MyCtrl1() {}
-MyCtrl1.$inject = [];
-
-
-function MyCtrl2() {
+function ParsedInputCtrl($scope, dataObjects) {
+    $scope.parsedInput = dataObjects;
 }
-MyCtrl2.$inject = [];
+
+ParsedInputCtrl.$inject = ['$scope'];
