@@ -49,7 +49,8 @@ namespace PidginToAdiumEmoteConverter.Models
                     sortedParsedInput.Equivalents.Add(name, equivalents);
                 }
 
-                ParsedInput = new ParsedPidginInput(sortedParsedInput.Images, sortedParsedInput.Names, sortedParsedInput.Equivalents);
+                ParsedInput = new ParsedPidginInput(
+                    sortedParsedInput.Images, sortedParsedInput.Names, sortedParsedInput.Equivalents);
             }
             catch (Exception)
             {
@@ -59,6 +60,18 @@ namespace PidginToAdiumEmoteConverter.Models
 
         public void Generate(ParsedPidginInput customizedPidginInput)
         {
+            SortedParsedPidginInput sortedCustomizedInput = new SortedParsedPidginInput();
+
+            for (int k = 0; k < customizedPidginInput.Names.Count; k++)
+            {
+                sortedCustomizedInput.Names.Add(customizedPidginInput.Names[k], customizedPidginInput.Names[k]);
+                sortedCustomizedInput.Images.Add(customizedPidginInput.Names[k], customizedPidginInput.Images[k]);
+                sortedCustomizedInput.Equivalents.Add(customizedPidginInput.Names[k], customizedPidginInput.Equivalents[k]);
+            }
+
+            ParsedPidginInput updatedCustomizedPidginInput = new ParsedPidginInput(
+                sortedCustomizedInput.Images, sortedCustomizedInput.Names, sortedCustomizedInput.Equivalents);
+
             StringBuilder sb = new StringBuilder();
 
             sb.Append("<plist version=\"1.0\">\r\n");
@@ -68,9 +81,9 @@ namespace PidginToAdiumEmoteConverter.Models
             sb.Append("    <key>Emoticons</key>\r\n");
             sb.Append("    <dict>\r\n");
 
-            string[] images = customizedPidginInput.Images.ToArray();
-            string[] names = customizedPidginInput.Names.ToArray();
-            string[][] equivalents = customizedPidginInput.Equivalents.ToArray();
+            string[] images = updatedCustomizedPidginInput.Images.ToArray();
+            string[] names = updatedCustomizedPidginInput.Names.ToArray();
+            string[][] equivalents = updatedCustomizedPidginInput.Equivalents.ToArray();
 
             for (int i = 0; i < images.Length; i++)
             {
@@ -79,7 +92,7 @@ namespace PidginToAdiumEmoteConverter.Models
                 sb.Append("        <key>Equivalents</key>\r\n");
                 sb.Append("        <array>\r\n");
 
-                for (int j = 1; j < equivalents[i].Length; j++)
+                for (int j = 0; j < equivalents[i].Length; j++)
                 {
                     sb.Append("          <string>" + equivalents[i][j] + "</string>\r\n");
                 }
