@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Web.Script.Serialization;
 
 namespace PidginToAdiumEmoteConverter.Models
 {
@@ -13,13 +12,13 @@ namespace PidginToAdiumEmoteConverter.Models
         public string JsonDataToConvert { get; set; }
         public string AdiumOutput { get; set; }
 
-        public static ParsedPidginInput Parse(string pidginRawInput)
+        public void Parse()
         {
-            ParsedPidginInput parsedInput = new ParsedPidginInput();
-
             try
             {
-                string[] delimitedLines = pidginRawInput.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
+                SortedParsedPidginInput sortedParsedInput = new SortedParsedPidginInput();
+
+                string[] delimitedLines = PidginRawInput.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
                 foreach (string line in delimitedLines)
                 {
@@ -32,11 +31,13 @@ namespace PidginToAdiumEmoteConverter.Models
 
                     string[] delimitedItems = lineContent.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
-                    parsedInput.Images.Add(delimitedItems[0]);
-
                     Regex rgx = new Regex("[^a-zA-Z0-9]");
 
-                    parsedInput.Names.Add(rgx.Replace(delimitedItems[1], ""));
+                    string name = rgx.Replace(delimitedItems[1], "");
+
+                    sortedParsedInput.Names.Add(name, name);
+
+                    sortedParsedInput.Images.Add(name, delimitedItems[0]);
 
                     string[] equivalents = new string[(delimitedItems.Length - 1)];
 
@@ -45,24 +46,55 @@ namespace PidginToAdiumEmoteConverter.Models
                         equivalents[(j - 1)] = delimitedItems[j];
                     }
 
-                    parsedInput.Equivalents.Add(equivalents);
+                    sortedParsedInput.Equivalents.Add(name, equivalents);
                 }
+
+                ParsedInput = new ParsedPidginInput(sortedParsedInput.Images, sortedParsedInput.Names, sortedParsedInput.Equivalents);
             }
             catch (Exception)
             {
                 throw new ArgumentException();
             }
-
-            return parsedInput;
         }
 
-        public static string Generate(ParsedPidginInput customizedPidginInput)
+        public void Generate(ParsedPidginInput customizedPidginInput)
         {
             StringBuilder sb = new StringBuilder();
 
-            
+            sb.Append("<plist version=\"1.0\">\r\n");
+            sb.Append("  <dict>\r\n");
+            sb.Append("    <key>AdiumSetVersion</key>\r\n");
+            sb.Append("    <integer>1</integer>\r\n");
+            sb.Append("    <key>Emoticons</key>\r\n");
+            sb.Append("    <dict>\r\n");
 
-            return sb.ToString();
+            string[] images = customizedPidginInput.Images.ToArray();
+            string[] names = customizedPidginInput.Names.ToArray();
+            string[][] equivalents = customizedPidginInput.Equivalents.ToArray();
+
+            for (int i = 0; i < images.Length; i++)
+            {
+                sb.Append("      <key>" + images[i] + "</key>\r\n");
+                sb.Append("      <dict>\r\n");
+                sb.Append("        <key>Equivalents</key>\r\n");
+                sb.Append("        <array>\r\n");
+
+                for (int j = 1; j < equivalents[i].Length; j++)
+                {
+                    sb.Append("          <string>" + equivalents[i][j] + "</string>\r\n");
+                }
+
+                sb.Append("        </array>\r\n");
+                sb.Append("        <key>Name</key>\r\n");
+                sb.Append("        <string>" + names[i] + "</string>\r\n");
+                sb.Append("      </dict>\r\n");
+            }
+
+            sb.Append("    </dict>\r\n");
+            sb.Append("  </dict>\r\n");
+            sb.Append("</plist>");
+
+            AdiumOutput = sb.ToString();
         }
     }
 }

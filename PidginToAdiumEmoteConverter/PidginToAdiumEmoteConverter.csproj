@@ -63,13 +63,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Models\ConversionOutputReadModel.cs" />
-    <Compile Include="Models\ConversionReadModel.cs" />
     <Compile Include="Controllers\ConversionsController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\ConversionReadWriteModel.cs" />
     <Compile Include="Models\ParsedPidginInput.cs" />
+    <Compile Include="Models\SortedParsedPidginInput.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -214,9 +214,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Views\Conversions\Convert.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <None Include="angular-seed\config\jsTestDriver-scenario.conf" />

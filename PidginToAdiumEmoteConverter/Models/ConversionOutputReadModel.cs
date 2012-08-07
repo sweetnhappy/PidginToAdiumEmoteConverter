@@ -7,7 +7,7 @@ namespace PidginToAdiumEmoteConverter.Models
 {
     public class ConversionOutputReadModel
     {
-        public string AdiumOutput { get; set; }
+        /*public string AdiumOutput { get; set; }
 
         public ConversionOutputReadModel(ConversionInputReadModel input)
         {
@@ -59,6 +59,6 @@ namespace PidginToAdiumEmoteConverter.Models
             sb.Append("</plist>");
 
             return sb.ToString();
-        }
+        }*/
     }
 }

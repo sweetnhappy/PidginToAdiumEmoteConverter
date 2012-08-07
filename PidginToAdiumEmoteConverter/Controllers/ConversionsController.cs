@@ -19,7 +19,7 @@ namespace PidginToAdiumEmoteConverter.Controllers
         {
             try
             {
-                model.ParsedInput = ConversionReadWriteModel.Parse(model.PidginRawInput);
+                model.Parse();
             }
             catch (ArgumentException)
             {
@@ -40,7 +40,7 @@ namespace PidginToAdiumEmoteConverter.Controllers
 
             try
             {
-                model.AdiumOutput = ConversionReadWriteModel.Generate(customizedPidginInput);
+                model.Generate(customizedPidginInput);
             }
             catch (ArgumentException)
             {
@@ -49,13 +49,5 @@ namespace PidginToAdiumEmoteConverter.Controllers
 
             return Json(model.AdiumOutput);
         }
-
-        /*[HttpPost]
-        public ActionResult Index(ConversionInputReadModel input)
-        {
-            ConversionOutputReadModel output = new ConversionOutputReadModel(input);
-
-            return View("Convert", output);
-        }*/
     }
 }

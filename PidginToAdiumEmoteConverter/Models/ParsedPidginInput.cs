@@ -1,6 +1,6 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace PidginToAdiumEmoteConverter.Models
 {
@@ -15,6 +15,15 @@ namespace PidginToAdiumEmoteConverter.Models
             Images = Enumerable.Empty<string>().ToList();
             Names = Enumerable.Empty<string>().ToList();
             Equivalents = Enumerable.Empty<string[]>().ToList();
+        }
+
+        public ParsedPidginInput(SortedList<string, string> images,
+                                 SortedList<string, string> names,
+                                 SortedList<string, string[]> equivalents)
+        {
+            Images = images.Values.ToList();
+            Names = names.Values.ToList();
+            Equivalents = equivalents.Values.ToList();
         }
     }
 }
