@@ -1,39 +1,217 @@
-﻿@model PidginToAdiumEmoteConverter.Models.ConversionInputReadModel
+﻿@model PidginToAdiumEmoteConverter.Models.ConversionReadWriteModel
 
 @{
     ViewBag.Title = "Pidgin Emoticon Set to Adium Emoticon Set Converter";
 }
 
-<h2>Pidgin Emoticon Set to Adium Emoticon Set Converter</h2>
-
-<script src="@Url.Content("~/Scripts/jquery.validate.min.js")" type="text/javascript"></script>
-<script src="@Url.Content("~/Scripts/jquery.validate.unobtrusive.min.js")" type="text/javascript"></script>
-
 <script language="javascript" type="text/javascript">
-    <!--
-    function submitForm() {
-        document.forms[0].submit();
+    var activeButton = 'Input';
+    var inputHasBeenParsed = false;
+    var outputHasBeenGenerated = false;
+    var parsedInput = null;
+    var generatedOutput = null;
+    var emoteCounter = 0;
+
+    $(document).ready(function () {
+        $('#PidginInputText').val('');
+    });
+
+    $(function () {
+        $('#InputButton').click(function () {
+            if (activeButton != 'Input') {
+                var currentDiv = '#' + activeButton + 'Div';
+                var currentButton = '#' + activeButton + 'Button';
+
+                $(currentDiv).fadeOut(function () {
+                    $(currentButton).removeClass('active');
+                    $('#InputButton').addClass('active');
+
+                    inputHasBeenParsed = false;
+                    parsedInput = null;
+                    outputHasBeenGenerated = false;
+                    generatedOutput = null;
+                    emoteCounter = 0;
+
+                    activeButton = "Input";
+
+                    $('#InputDiv').fadeIn();
+                });
+            }
+        });
+
+        $('#CustomizationButton').click(function () {
+            if (activeButton != 'Customization') {
+                var currentDiv = '#' + activeButton + 'Div';
+                var currentButton = '#' + activeButton + 'Button';
+
+                if (!inputHasBeenParsed) {
+                    var input = $('#PidginInputText').val();
+
+                    if (input.length > 0) {
+                        $.post('@Url.Action("ParsePidginInput")', { "PidginRawInput": input },
+                            function (data) {
+                                if (data === "Parsing Error") {
+                                    alert(data);
+                                }
+                                else {
+                                    parsedInput = JSON.parse(data);
+
+                                    inputHasBeenParsed = true;
+
+                                    renderCustomizationDiv();
+
+                                    $(currentDiv).fadeOut(function () {
+                                        $(currentButton).removeClass('active');
+                                        $('#CustomizationButton').addClass('active');
+
+                                        activeButton = "Customization";
+
+                                        $('#CustomizationDiv').fadeIn();
+                                    });
+                                }
+                            }
+                        );
+                    }
+                }
+                else {
+                    $(currentDiv).fadeOut(function () {
+                        $(currentButton).removeClass('active');
+                        $('#CustomizationButton').addClass('active');
+
+                        activeButton = "Customization";
+
+                        $('#CustomizationDiv').fadeIn();
+                    });
+                }
+            }
+        });
+
+        $('#OutputButton').click(function () {
+            if (activeButton != 'Output') {
+                if (!inputHasBeenParsed) {
+                    var input = $('#PidginInputText').val();
+
+                    if (input.length > 0) {
+                        $.post('@Url.Action("ParsePidginInput")', { "PidginRawInput": input },
+                            function(data) {
+                                if (data === "Parsing Error") {
+                                    alert(data);
+                                } else {
+                                    parsedInput = JSON.parse(data);
+
+                                    inputHasBeenParsed = true;
+
+                                    renderCustomizationDiv();
+
+                                    performOutputGeneration();
+                                }
+                            }
+                        );
+                    }
+                }
+                else {
+                    performOutputGeneration();
+                }
+            }
+        });
+    });
+
+    function renderCustomizationDiv() {
+        $('#EmotesTableBody').html('');
+
+        for (var i = 0; i < parsedInput["Images"].length; i++) {
+            var newTableRow = $('<tr>' +
+                    '<td>' + parsedInput["Images"][i] + '</td>' +
+                    '<td><input type="text" id="name' + i + '" value="' + parsedInput["Names"][i] + '" /></td>' +
+                    '<td>' + parsedInput["Equivalents"][i].join(', ') + '</td>' +
+                    '</tr>');
+
+            $('#EmotesTableBody').append(newTableRow);
+
+            emoteCounter++;
+        }
     }
-    -->
+
+    function updateCustomNames() {
+        for (var i = 0; i < emoteCounter; i++) {
+            parsedInput["Names"][i] = $('#name' + i).val();
+        }
+    }
+
+    function performOutputGeneration() {
+        updateCustomNames();
+
+        $.post('@Url.Action("GenerateAdiumOutput")', { "JsonDataToConvert": JSON.stringify(parsedInput) },
+            function (data) {
+                if (data === "Conversion Error") {
+                    alert(data);
+                }
+                else {
+                    generatedOutput = data;
+
+                    outputHasBeenGenerated = true;
+
+                    $('#AdiumOutputText').val(generatedOutput);
+
+                    var currentDiv = '#' + activeButton + 'Div';
+                    var currentButton = '#' + activeButton + 'Button';
+
+                    $(currentDiv).fadeOut(function () {
+                        $(currentButton).removeClass('active');
+                        $('#OutputButton').addClass('active');
+
+                        activeButton = "Output";
+
+                        $('#OutputDiv').fadeIn();
+                    });
+                }
+            }
+        );
+    }
 </script>
 
-<div style="padding-top: 10px; padding-bottom: 10px;">
-    This converts a Pidgin emoticon pack's <strong>theme</strong> to an Adium emoticon set's <strong>Emoticons.plist</strong>
+<h2>Pidgin Emoticon Set to Adium Emoticon Set Converter</h2>
+
+<div style="padding-top: 10px; padding-bottom: 15px;">
+    This converts a Pidgin emoticon pack's <strong>theme</strong> file to an Adium emoticon set's <strong>Emoticons.plist</strong> file.
 </div>
 
-@using (Html.BeginForm()) {
-    @Html.ValidationSummary(true)
-    <fieldset>
-        <legend>Pidgin Input:</legend>
-        <div class="editor-field">
-            @Html.TextAreaFor(model => model.PidginInput, new { @class = "input-xxlarge", @rows = "20" })
-            @Html.ValidationMessageFor(model => model.PidginInput)
-        </div>
-
+<div class="well">
+    <div id="InputDiv">
+        <h3 style="padding-bottom: 10px;">Pidgin Input:</h3>
+        <textarea id="PidginInputText" class="input-xxlarge span11" rows="20"></textarea>
+    </div>
+    <div id="CustomizationDiv" style="display: none;">
+        <h3 style="padding-bottom: 10px;">Customize Names for Adium:</h3>
         <div>
-            <button type="submit" class="btn btn-primary btn-large">
-                Convert&nbsp;&nbsp;<i class="icon-arrow-right icon-white"></i>
+            <table class="table table-bordered table-condensed" style="background-color: white;">
+                <thead>
+                    <tr>
+                        <th class="span2">Image File</th>
+                        <th class="span2">Emote Name</th>
+                        <th>Text Equivalents</th>
+                    </tr>
+                </thead>
+                <tbody id="EmotesTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div id="OutputDiv" style="display: none;">
+        <h3 style="padding-bottom: 10px;">Adium Output:</h3>
+        <textarea id="AdiumOutputText" class="input-xxlarge span11" rows="20"></textarea>
+    </div>
+    <div id="ButtonFooterDiv" style="padding-top: 10px;">
+        <div class="btn-group">
+            <button class="btn btn-large btn-primary active" id="InputButton">
+                <i class="icon-list-alt icon-white"></i>&nbsp;&nbsp;<strong>Pidgin Input</strong>
+            </button>
+            <button class="btn btn-large btn-primary" id="CustomizationButton">
+                <i class="icon-pencil icon-white"></i>&nbsp;&nbsp;<strong>Customization</strong>
+            </button>
+            <button class="btn btn-large btn-primary" id="OutputButton">
+                <i class="icon-file icon-white"></i>&nbsp;&nbsp;<strong>Adium Output</strong>
             </button>
         </div>
-    </fieldset>
-}
+    </div>
+</div>

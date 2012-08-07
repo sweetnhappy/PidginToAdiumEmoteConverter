@@ -1,5 +1,7 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Web.Mvc;
+using System.Web.Script.Serialization;
 using PidginToAdiumEmoteConverter.Models;
 
 namespace PidginToAdiumEmoteConverter.Controllers
@@ -13,11 +15,39 @@ namespace PidginToAdiumEmoteConverter.Controllers
         }
 
         [HttpPost]
-        public ActionResult Index(ConversionInputReadModel input)
+        public JsonResult ParsePidginInput(ConversionReadWriteModel model)
         {
-            ConversionOutputReadModel output = new ConversionOutputReadModel(input);
+            try
+            {
+                model.Parse();
+            }
+            catch (ArgumentException)
+            {
+                return Json("Parsing Error");
+            }
 
-            return View("Convert", output);
+            JavaScriptSerializer jss = new JavaScriptSerializer();
+            string json = jss.Serialize(model.ParsedInput);
+
+            return Json(json);
+        }
+
+        [HttpPost]
+        public JsonResult GenerateAdiumOutput(ConversionReadWriteModel model)
+        {
+            JavaScriptSerializer jss = new JavaScriptSerializer();
+            ParsedPidginInput customizedPidginInput = jss.Deserialize<ParsedPidginInput>(model.JsonDataToConvert);
+
+            try
+            {
+                model.Generate(customizedPidginInput);
+            }
+            catch (ArgumentException)
+            {
+                return Json("Conversion Error");
+            }
+
+            return Json(model.AdiumOutput);
         }
     }
 }
